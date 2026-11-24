@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ريموت الشاشات</string>
+    <string name="scan">بحث عن الشاشات</string>
+    <string name="scanning">جارٍ البحث في الشبكة…</string>
+    <string name="empty">لم يتم العثور على شاشات. تأكد أن الهاتف والشاشة على نفس شبكة الواي فاي ثم أعد البحث.</string>
+    <string name="connecting">جارٍ الاتصال…</string>
+    <string name="connected">متصل</string>
+    <string name="pairing_prompt">اقبل طلب الاتصال الظاهر على الشاشة…</string>
+    <string name="enter_code">أدخل الكود الظاهر على الشاشة</string>
+    <string name="ok">موافق</string>
+    <string name="cancel">إلغاء</string>
+</resources>

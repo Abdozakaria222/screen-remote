@@ -1,9 +1,11 @@
 package com.screenremote.app.ui
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.InputType
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
@@ -25,6 +27,10 @@ class RemoteActivity : AppCompatActivity(), ControllerListener {
         const val EXTRA_IP = "ip"
         const val EXTRA_PORT = "port"
         const val EXTRA_TYPE = "type"
+
+        // زمن بدء التكرار ثم الفاصل بين كل ضغطة وأخرى عند الاستمرار بالضغط
+        private const val REPEAT_INITIAL_DELAY = 400L
+        private const val REPEAT_INTERVAL = 120L
     }
 
     private var controller: RemoteController? = null
@@ -63,28 +69,69 @@ class RemoteActivity : AppCompatActivity(), ControllerListener {
     }
 
     private fun bindButtons() {
-        val map = mapOf(
+        // أزرار تُرسل مرة واحدة بالضغطة
+        val singleKeys = mapOf(
             R.id.btnPower to RemoteKey.POWER,
-            R.id.btnUp to RemoteKey.UP,
-            R.id.btnDown to RemoteKey.DOWN,
-            R.id.btnLeft to RemoteKey.LEFT,
-            R.id.btnRight to RemoteKey.RIGHT,
             R.id.btnOk to RemoteKey.OK,
             R.id.btnBack to RemoteKey.BACK,
             R.id.btnHome to RemoteKey.HOME,
             R.id.btnMenu to RemoteKey.MENU,
-            R.id.btnVolDown to RemoteKey.VOLUME_DOWN,
-            R.id.btnVolUp to RemoteKey.VOLUME_UP,
             R.id.btnMute to RemoteKey.MUTE,
-            R.id.btnRewind to RemoteKey.REWIND,
-            R.id.btnPlay to RemoteKey.PLAY_PAUSE,
-            R.id.btnForward to RemoteKey.FORWARD
+            R.id.btnPlay to RemoteKey.PLAY_PAUSE
         )
-        for ((id, key) in map) {
+        for ((id, key) in singleKeys) {
             val view = findViewById<View>(id)
             view.setOnClickListener { controller?.sendKey(key) }
             buttons.add(view)
         }
+
+        // أزرار تتكرر عند الاستمرار بالضغط (الأسهم والصوت والتقديم/الترجيع)
+        val repeatKeys = mapOf(
+            R.id.btnUp to RemoteKey.UP,
+            R.id.btnDown to RemoteKey.DOWN,
+            R.id.btnLeft to RemoteKey.LEFT,
+            R.id.btnRight to RemoteKey.RIGHT,
+            R.id.btnVolDown to RemoteKey.VOLUME_DOWN,
+            R.id.btnVolUp to RemoteKey.VOLUME_UP,
+            R.id.btnRewind to RemoteKey.REWIND,
+            R.id.btnForward to RemoteKey.FORWARD
+        )
+        for ((id, key) in repeatKeys) {
+            bindRepeatKey(findViewById(id), key)
+        }
+    }
+
+    /** يرسل الزر مرة عند الضغط، ثم يكرره كل فترة طالما الإصبع مستمر بالضغط. */
+    @SuppressLint("ClickableViewAccessibility")
+    private fun bindRepeatKey(view: View, key: RemoteKey) {
+        var repeater: Runnable? = null
+        view.setOnTouchListener { v, event ->
+            when (event.actionMasked) {
+                MotionEvent.ACTION_DOWN -> {
+                    if (!v.isEnabled) return@setOnTouchListener false
+                    controller?.sendKey(key)
+                    v.isPressed = true
+                    val runnable = object : Runnable {
+                        override fun run() {
+                            controller?.sendKey(key)
+                            ui.postDelayed(this, REPEAT_INTERVAL)
+                        }
+                    }
+                    repeater = runnable
+                    ui.postDelayed(runnable, REPEAT_INITIAL_DELAY)
+                    true
+                }
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    repeater?.let { ui.removeCallbacks(it) }
+                    repeater = null
+                    v.isPressed = false
+                    v.performClick()
+                    true
+                }
+                else -> false
+            }
+        }
+        buttons.add(view)
     }
 
     private fun bindTextInput() {
@@ -174,6 +221,7 @@ class RemoteActivity : AppCompatActivity(), ControllerListener {
 
     override fun onDestroy() {
         super.onDestroy()
+        ui.removeCallbacksAndMessages(null)
         codeDialog?.dismiss()
         controller?.disconnect()
     }

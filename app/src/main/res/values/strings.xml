@@ -10,4 +10,6 @@
     <string name="enter_code">أدخل الكود الظاهر على الشاشة</string>
     <string name="ok">موافق</string>
     <string name="cancel">إلغاء</string>
+    <string name="type_hint">اكتب نصاً لإرساله للشاشة…</string>
+    <string name="send_text">إرسال</string>
 </resources>

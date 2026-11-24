@@ -240,11 +240,66 @@ class AndroidTvController(
         }.start()
     }
 
+    /**
+     * Android TV v2 لا يدعم إرسال نص عربي عبر هذا البروتوكول — فقط حروف لاتينية
+     * وأرقام ورموز أساسية تُرسَل كأحداث مفاتيح (keycodes).
+     */
+    override fun sendText(text: String) {
+        Thread {
+            try {
+                for (ch in text) {
+                    val m = mapChar(ch) ?: continue
+                    val keycode = m.first
+                    if (m.second) {
+                        injectRaw(KEYCODE_SHIFT_LEFT, RemoteDirection.START_LONG)
+                        injectRaw(keycode, RemoteDirection.SHORT)
+                        injectRaw(KEYCODE_SHIFT_LEFT, RemoteDirection.END_LONG)
+                    } else {
+                        injectRaw(keycode, RemoteDirection.SHORT)
+                    }
+                    Thread.sleep(40)
+                }
+            } catch (e: Exception) {
+                listener?.onError(e.message ?: "تعذّر إرسال النص")
+            }
+        }.start()
+    }
+
+    private fun injectRaw(keycode: Int, direction: RemoteDirection) {
+        send(
+            RemoteMessage.newBuilder().setRemoteKeyInject(
+                RemoteKeyInject.newBuilder()
+                    .setKeyCodeValue(keycode)
+                    .setDirection(direction)
+                    .build()
+            ).build()
+        )
+    }
+
+    /** يرجع (keycode, needsShift) أو null للحروف غير المدعومة. */
+    private fun mapChar(ch: Char): Pair<Int, Boolean>? = when (ch) {
+        in 'a'..'z' -> Pair(KEYCODE_A + (ch - 'a'), false)
+        in 'A'..'Z' -> Pair(KEYCODE_A + (ch - 'A'), true)
+        in '0'..'9' -> Pair(KEYCODE_0 + (ch - '0'), false)
+        ' ' -> Pair(62, false)   // KEYCODE_SPACE
+        '.' -> Pair(56, false)   // KEYCODE_PERIOD
+        ',' -> Pair(55, false)   // KEYCODE_COMMA
+        '-' -> Pair(69, false)   // KEYCODE_MINUS
+        '@' -> Pair(77, false)   // KEYCODE_AT
+        else -> null
+    }
+
     override fun disconnect() {
         running = false
         runCatching { remoteSocket?.close() }
         remoteSocket = null
         out = null
+    }
+
+    private companion object {
+        const val KEYCODE_A = 29
+        const val KEYCODE_0 = 7
+        const val KEYCODE_SHIFT_LEFT = 59
     }
 
     private fun map(key: RemoteKey): RemoteKeyCode? = when (key) {

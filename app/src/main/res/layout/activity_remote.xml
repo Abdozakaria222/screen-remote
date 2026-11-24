@@ -238,5 +238,32 @@
                 android:text="⏩" />
         </LinearLayout>
 
+        <!-- كتابة وإرسال نص إلى الشاشة -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="20dp">
+
+            <EditText
+                android:id="@+id/textInput"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_margin="4dp"
+                android:hint="@string/type_hint"
+                android:inputType="text"
+                android:imeOptions="actionSend"
+                android:maxLines="1" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnSendText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="4dp"
+                android:text="@string/send_text" />
+        </LinearLayout>
+
     </LinearLayout>
 </ScrollView>

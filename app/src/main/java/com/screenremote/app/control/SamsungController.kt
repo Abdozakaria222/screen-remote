@@ -78,6 +78,19 @@ class SamsungController(
         webSocket?.send(msg.toString())
     }
 
+    override fun sendText(text: String) {
+        val encoded = Base64.encodeToString(text.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
+        val msg = JSONObject().apply {
+            put("method", "ms.remote.control")
+            put("params", JSONObject().apply {
+                put("Cmd", encoded)
+                put("DataOfCmd", "base64")
+                put("TypeOfRemote", "SendInputString")
+            })
+        }
+        webSocket?.send(msg.toString())
+    }
+
     override fun disconnect() {
         runCatching { webSocket?.close(1000, null) }
         webSocket = null

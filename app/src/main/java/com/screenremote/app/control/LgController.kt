@@ -139,6 +139,13 @@ class LgController(
         }
     }
 
+    override fun sendText(text: String) {
+        ssap(
+            "ssap://com.webos.service.ime/insertText",
+            JSONObject().put("text", text).put("replace", 0)
+        )
+    }
+
     override fun disconnect() {
         runCatching { pointerSocket?.close(1000, null) }
         runCatching { mainSocket?.close(1000, null) }

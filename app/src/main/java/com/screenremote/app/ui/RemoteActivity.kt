@@ -5,6 +5,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.InputType
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
@@ -46,6 +47,7 @@ class RemoteActivity : AppCompatActivity(), ControllerListener {
         status = findViewById(R.id.status)
 
         bindButtons()
+        bindTextInput()
 
         val device = DiscoveredDevice(name, ip, port, type)
         controller = ControllerFactory.create(this, device)
@@ -83,6 +85,29 @@ class RemoteActivity : AppCompatActivity(), ControllerListener {
             view.setOnClickListener { controller?.sendKey(key) }
             buttons.add(view)
         }
+    }
+
+    private fun bindTextInput() {
+        val textInput = findViewById<EditText>(R.id.textInput)
+        val sendTextBtn = findViewById<View>(R.id.btnSendText)
+        val doSend = {
+            val text = textInput.text?.toString()?.trim().orEmpty()
+            if (text.isNotEmpty()) {
+                controller?.sendText(text)
+                textInput.setText("")
+            }
+        }
+        sendTextBtn.setOnClickListener { doSend() }
+        textInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                doSend()
+                true
+            } else {
+                false
+            }
+        }
+        buttons.add(textInput)
+        buttons.add(sendTextBtn)
     }
 
     private fun setButtonsEnabled(enabled: Boolean) {

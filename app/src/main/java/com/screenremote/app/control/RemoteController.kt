@@ -7,6 +7,9 @@ interface RemoteController {
     fun sendKey(key: RemoteKey)
     fun disconnect()
 
+    /** إرسال نص مكتوب إلى حقل الإدخال المحدَّد على الشاشة (بحث، كلمة سر…). */
+    fun sendText(text: String) {}
+
     /** وحدة Android TV فقط تستخدمها لإرسال كود الاقتران الظاهر على الشاشة. */
     fun submitPairingCode(code: String) {}
 }
